@@ -8,7 +8,7 @@ def main():
     mode=parser.add_mutually_exclusive_group()
     mode.add_argument("--demo",type=int,nargs="?",const=12,help="bounded synthetic visitors (0..256), no radio")
     mode.add_argument("--replay",type=Path,help="JSONL records: rx public-key hex and payload hex")
-    mode.add_argument("--connect",help="serial:PORT, ble:ADDRESS or tcp:HOST:PORT")
+    mode.add_argument("--connect",help="serial:PORT, ble:ADDRESS, tcp:HOST:PORT or openhop:HOST:PORT")
     parser.add_argument("--token-file",type=Path,help="32-byte pairing token for authenticated TCP bridge")
     parser.add_argument("--database",type=Path)
     parser.add_argument("--session",default="community")

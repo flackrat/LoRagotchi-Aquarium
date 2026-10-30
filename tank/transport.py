@@ -132,10 +132,33 @@ class BLETransport:
             if not self.thread.is_alive():self.loop.close()
 
 
+class OpenHopCompanionTransport(StreamTransport):
+    """A plain TCP link to an openHop repeater's companion port (no bridge handshake).
+
+    openHop uses the same frame layout as the stock companion: '<' out to the companion, '>' back, with a
+    16-bit little-endian length. One companion accepts one TCP client, so this must be the only consumer.
+    """
+    def __init__(self, host, port, timeout=3):
+        super().__init__()
+        self.socket=socket.create_connection((host,port),timeout=timeout)
+        self.socket.settimeout(.1)
+    def read(self):
+        try:
+            data=self.socket.recv(1024)
+            if not data: raise ConnectionError("openHop companion disconnected")
+            return data
+        except socket.timeout:return b""
+    def write(self,data):self.socket.sendall(data)
+    def close(self):self.socket.close()
+
+
 def open_transport(uri,token=None,cancel=None):
     if uri.startswith("serial:"):return SerialTransport(uri[7:])
     if uri.startswith("ble:"):return BLETransport(uri[4:],cancel)
     if uri.startswith("tcp:"):
         host,port=uri[4:].rsplit(":",1)
         return TCPTransport(host.strip('[]'),int(port),token)
-    raise ValueError("Connection must be serial:PORT, ble:ADDRESS or tcp:HOST:PORT")
+    if uri.startswith("openhop:"):
+        host,port=uri[8:].rsplit(":",1)
+        return OpenHopCompanionTransport(host.strip('[]'),int(port))
+    raise ValueError("Connection must be serial:PORT, ble:ADDRESS, tcp:HOST:PORT or openhop:HOST:PORT")
