@@ -1,4 +1,4 @@
-# Water RX–Aquarium contract (proposal; not negotiated or deployed)
+# Water RX–Aquarium contract (local implementation; not deployed)
 
 LRX/1 signature and commands 0–6 are unchanged. Kind 1 is exactly 77 bytes;
 kind 2 is exactly 11 bytes. No padding is repurposed. Default export is legacy.
@@ -49,6 +49,6 @@ species_present=False, genes_present=False, panel_present=False. Presence descri
 received metadata, not guesses. SQLite JSON rows need no destructive schema reset;
 missing keys use dataclass defaults. Partial/legacy re-shares preserve prior known
 metadata only for the same owner and fish ID; never transfer it to a new fish identity. Event rows remain
-durable replay records. Registry is tank.species; pure colour helpers tank.genes.
+durable replay records. Registry is tank.species; fine-colour rendering is a separate consumer concern.
 LEG1 eggs stay fish-only: no species suffix or name-based inference, and no changes
 to local Mystery/adopted identity semantics.
