@@ -30,6 +30,10 @@ def juvenile_colours(snapshot):
         genetic=colour(allele,snapshot.tint)
         if allele==6:return genetic
         return tuple((genetic[k]*weight+ivory[k]*(8-weight))/8 for k in range(3))
+    if getattr(snapshot,'kind','')=='local_fry':
+        # Preserve immutable linear-sRGB egg preview without RGB565 quantisation.
+        genetic=snapshot.local_body_rgb
+        return tuple(tuple((genetic[k]*w+ivory[k]*(8-w))/8 for k in range(3)) for w in (2,5))
     young=snapshot.stage==1
     return (express(snapshot.body,5 if young else 2),
             express(snapshot.scales if young else snapshot.body,6 if young else 5))
