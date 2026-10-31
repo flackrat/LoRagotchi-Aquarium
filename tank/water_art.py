@@ -36,11 +36,18 @@ def creature_model(s, detail, species):
         if species==4:
             blob('whale-head',(.55,0,.06),(.5,.38,.38)); poly('spout',[(.3,0,.38),(.18,0,.72),(.32,0,.62),(.45,0,.75),(.38,0,.36)])
         if species==5: blob('muzzle',(.7,0,-.12),(.25,.24,.16),accent)
-        poly('tail',[(0,0,0),(-.55,0,.45),(-.4,0,0),(-.55,0,-.45)],parent=tail)
+        if species in (3,4):
+            # Cetaceans have horizontal flukes; X/Y plane, not shark's vertical tail.
+            poly('horizontal-fluke',[(0,0,0),(-.42,-.58,.08),(-.55,0,0),(-.42,.58,.08)],parent=tail)
+        elif species==5:
+            for side in (-1,1):
+                poly('hind-flipper',[(0,0,0),(-.5,side*.34,-.18),(-.35,side*.45,-.32)],parent=tail)
+        else:
+            poly('tail',[(0,0,0),(-.55,0,.45),(-.4,0,0),(-.55,0,-.45)],parent=tail)
         for side in (-1,1):
-            j=joint('flipper',(.0,side*.25,-.1));poly('flipper',[(0,0,0),(-.35,side*.38,-.38),(.25,side*.15,-.2)],parent=j)
+            j=joint('flipper',(.0,side*.25,-.1));poly('flipper',[(0,0,0),(-.48,side*.50,-.45),(.20,side*.18,-.24)] if species==5 else [(0,0,0),(-.35,side*.38,-.38),(.25,side*.15,-.2)],parent=j)
     elif species in (6,8,9):
-        blob('carapace',(0,0,0),(.66,.38,.34) if species!=9 else (.56,.43,.48)); eyes(.38,.23,.32)
+        blob('carapace',(0,0,0),(.42,.32,.32) if species==6 else ((.66,.38,.34) if species==8 else (.56,.43,.48))); eyes(.30,.20,.28)
         for i in range(3 if species!=9 else 4):
             for side in (-1,1):
                 j=joint('leg',(-.38+i*.25,side*.25,-.14))
@@ -50,8 +57,11 @@ def creature_model(s, detail, species):
                 j=joint('claw',(.35,side*.29,0));blob('claw',(.30,side*.18,.22 if side<0 else -.2),(.30,.16,.20),accent,j)
                 poly('pincer',[(.47,side*.18,.3 if side<0 else -.12),(.72,side*.18,.4 if side<0 else -.02),(.55,side*.18,.16 if side<0 else -.26)],parent=j)
         else:
-            for i in range(3): blob('segment',(-.48-i*.18,0,0),(.2,.23-i*.04,.24-i*.04),accent if i%2 else body)
-        if species != 9: poly('tail-fan',[(0,0,0),(-.45,0,.3),(-.32,0,0),(-.45,0,-.3)],parent=tail)
+            # Tapering abdominal segments curve down and then forward.
+            for i,(x,z) in enumerate(((-.39,-.02),(-.57,-.12),(-.68,-.28),(-.65,-.43))):
+                blob('shrimp-segment',(x,0,z),(.18-i*.02,.24-i*.03,.23-i*.025),accent if i%2 else body)
+            poly('antenna',[(.3,-.05,.22),(.75,-.05,.55),(.4,-.05,.24)],accent)
+        if species == 8: poly('tail-fan',[(0,0,0),(-.45,0,.3),(-.32,0,0),(-.45,0,-.3)],parent=tail)
     elif species in (7,10,11):
         blob('mantle',(0,0,.25),(.48,.35,.62) if species==7 else (.52,.4,.4))
         if species==7: poly('squid-tip',[(-.4,0,.5),(0,0,1.02),(.4,0,.5)])
@@ -66,11 +76,14 @@ def creature_model(s, detail, species):
         for side in (-1,1):
             j=joint('foot',(.35,side*.18,-.3));poly('foot',[(0,0,0),(.28,side*.2,-.2),(-.25,side*.25,-.18)],parent=j)
     elif species==13:
-        points=[]
-        for i in range(10):
-            a=math.pi/2+i*math.pi/5; r=.85 if i%2==0 else .33
-            points.append((r*math.cos(a),0,r*math.sin(a)))
-        poly('five-arm-star',points,body);blob('centre',(0,-.04,0),(.25,.1,.25),accent);eyes(.12,.1,.12)
+        # Five individually triangulated arms avoid a concave polygon fan.
+        for i in range(5):
+            a=math.pi/2+i*math.tau/5
+            tip=(.88*math.cos(a),0,.88*math.sin(a))
+            left=(.31*math.cos(a-.52),0,.31*math.sin(a-.52))
+            right=(.31*math.cos(a+.52),0,.31*math.sin(a+.52))
+            poly('star-arm',[(-.01,0,0),left,tip,right],body)
+        blob('centre',(0,-.04,0),(.30,.1,.30),body);eyes(.12,.1,.12)
         for i in range(5):
             a=math.tau*i/5;j=joint('arm-joint',(.3*math.cos(a),0,.3*math.sin(a)))
             blob('arm-tip',(.25*math.cos(a),0,.25*math.sin(a)),(.12,.07,.12),accent,j)
@@ -79,7 +92,8 @@ def creature_model(s, detail, species):
 
 def animate_water(root,tail,fins,phase,speed):
     species=int(root.getTag('water-species'))
-    tail.setH(math.sin(phase)*22*speed)
+    if species in (3,4,5): tail.setP(math.sin(phase)*20*speed)
+    else: tail.setH(math.sin(phase)*22*speed)
     for i,node in enumerate(fins):
         wave=math.sin(phase*.65+i*1.1)
         if species in (7,10,11,13): node.setR(wave*(12 if species!=11 else 8))
